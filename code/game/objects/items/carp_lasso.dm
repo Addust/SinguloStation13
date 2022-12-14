@@ -12,10 +12,49 @@
 
 /obj/item/mob_lasso/afterattack(atom/target, mob/user, proximity_flag, click_parameters)
 	. = ..()
+<<<<<<< HEAD
 	if(isliving(target) && check_allowed(target) && !iscarbon(target) && !issilicon(target) && locate(target) in oview(9, get_turf(src)))
 		var/mob/living/simple_animal/C = target
 		if(IS_DEAD_OR_INCAP(C))
 			to_chat(user, "<span class='warning'>[target] is dead.</span>")
+=======
+	var/failed = FALSE
+	if(!isliving(target))
+		failed = TRUE
+	if(!check_allowed(target))
+		failed = TRUE
+	if(iscarbon(target) || issilicon(target))
+		failed = TRUE
+	if(failed)
+		if(ismob(target))
+			to_chat(user, "<span class='warning'>[target] seems a bit big for this...</span>")
+		return
+	if(!(locate(target) in oview(range, user)))
+		if(ismob(target))
+			to_chat(user, "<span class='warning'>You can't lasso [target] from here!</span>")
+		return
+	var/mob/living/simple_animal/C = target
+	if(IS_DEAD_OR_INCAP(C))
+		to_chat(user, "<span class='warning'>[target] is dead.</span>")
+		return
+	if(user.a_intent == INTENT_HELP && C == mob_target) //if trying to tie up previous target
+		to_chat(user, "<span class='notice'>You begin to untie [C]</span>")
+		if(proximity_flag && do_after(user, 2 SECONDS, FALSE, target))
+			user.faction |= "carpboy_[user]"
+			C.faction = list("neutral")
+			C.faction |= "carpboy_[user]"
+			C.faction |= user.faction
+			C.transform = transform.Turn(0)
+			C.toggle_ai(AI_ON)
+			var/datum/component/tamed_command/T = C.AddComponent(/datum/component/tamed_command)
+			T.add_ally(user)
+			to_chat(user, "<span class='notice'>[C] nuzzles you.</span>")
+			UnregisterSignal(mob_target, COMSIG_PARENT_QDELETING)
+			mob_target = null
+			if(timer)
+				deltimer(timer)
+				timer = null
+>>>>>>> 0129e1d8ef (Fixes a faction bug with tamed animals (#8185))
 			return
 		if(user.a_intent == INTENT_HELP && C == mob_target) //if trying to tie up previous target
 			to_chat(user, "<span class='notice'>You begin to untie [C]</span>")
